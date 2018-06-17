@@ -18,24 +18,41 @@
          ul ol li
          strong em blockquote sup
          table tbody tr td) (cons h (map allow (cdr x)))]
-       [(img @ code pre a) x]
+       [(@ code pre a) x]
+       [(img)
+        (match x
+          [`(img ,(list '@ A ... `(src ,(? string? path)) B ...) ,@C)
+           {define path1
+             {match (string->list path)
+               [`(#\. #\. #\/ #\. #\. #\/ #\. #\. #\/ #\. #\. #\/ ,@R) (list->string `(#\. #\/ ,@R))]
+               [_ path]}}
+           `(img (@ ,@A (src ,path1) ,@B) ,@C)])]
        [else (error x)])]
     [(string? x)
      (case x
        [("\r\n" "\n") "\r\n"]
        [else x])]
     [else (error x)])}
+{define K '()}
 {define all-bodys
   {map
    {λ (path)
-     {define port (open-input-file	path)}
+     {define port (open-input-file path)}
      {define htmlv (html->xexp port)}
-     {match-define (list '*TOP* _ ... (list 'html _ ... (list 'body body ...) _ ...) _ ...) htmlv}
+     {match-define (list '*TOP* _ ... (list 'html T ... (list 'body body ...) _ ...) _ ...) htmlv}
+     {set! K T}
      (map allow body)
      }
    paths}}
-{define body (apply append all-bodys)}
-{define html `(html (body . ,body))}
+{define head
+  '(head
+    (meta (@ (http-equiv "content-type") (content "text/html; charset=utf-8")))
+    (meta (@ (name "viewport") (content "width=device-width, initial-scale=0.5")))
+    (link (@ (href "main.css") (rel "stylesheet") (type "text/css")))
+    (link (@ (rel "shortcut icon") (href "images/Yc.jpg")))
+    )}
+{define body `(body . ,(apply append all-bodys))}
+{define html `(html ,body)}
 {define xml (xexpr->xml html)}
 {define doc (document (prolog '() #f '()) xml '())}
-(write-xml doc)
+(write-xml doc (open-output-file "./all.html" #:exists 'replace))

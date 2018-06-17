@@ -1,0 +1,2 @@
+#!/bin/sh
+racket MAKE-HTML-ALL.rkt

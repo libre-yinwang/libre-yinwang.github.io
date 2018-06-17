@@ -52,7 +52,7 @@
     (link (@ (rel "shortcut icon") (href "images/Yc.jpg")))
     )}
 {define body `(body . ,(apply append all-bodys))}
-{define html `(html ,body)}
+{define html `(html ,head ,body)}
 {define xml (xexpr->xml html)}
 {define doc (document (prolog '() #f '()) xml '())}
 (write-xml doc (open-output-file "./all.html" #:exists 'replace))
